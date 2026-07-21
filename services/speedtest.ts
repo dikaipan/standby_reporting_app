@@ -25,7 +25,6 @@ export const measurePing = async (): Promise<number> => {
     }
   }
 
-  // Fallback GET measurement
   try {
     const start = Date.now();
     await fetch(`https://www.google.com/generate_204?t=${start}`, { cache: 'no-store' });
@@ -35,135 +34,120 @@ export const measurePing = async (): Promise<number> => {
   }
 };
 
+/**
+ * Multi-stream parallel download test (3 simultaneous connections)
+ * Saturates connection bandwidth matching native speedtest engines.
+ */
 export const measureDownload = async (
   onProgress?: (mbps: number) => void,
 ): Promise<number> => {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    // 5MB Cloudflare test payload
-    const testUrl = `https://speed.cloudflare.com/__down?bytes=5000000&t=${Date.now()}`;
-    const startTime = Date.now();
-    let loadedBytes = 0;
+  const numStreams = 3;
+  const chunkSize = 5_000_000; // 5MB per stream = 15MB total capacity
+  const startTime = Date.now();
+  const loadedPerStream = new Array(numStreams).fill(0);
 
-    xhr.open('GET', testUrl, true);
-    xhr.responseType = 'arraybuffer';
+  const downloadStream = (index: number): Promise<number> => {
+    return new Promise((resolve) => {
+      const xhr = new XMLHttpRequest();
+      const url = `https://speed.cloudflare.com/__down?bytes=${chunkSize}&t=${Date.now()}_${index}`;
 
-    xhr.onprogress = (event) => {
-      loadedBytes = event.loaded;
-      const elapsed = (Date.now() - startTime) / 1000;
-      if (elapsed > 0 && event.loaded > 0) {
-        const currentMbps = (event.loaded * 8) / (elapsed * 1_000_000);
-        onProgress?.(Math.round(currentMbps * 10) / 10);
-      }
-    };
+      xhr.open('GET', url, true);
+      xhr.responseType = 'arraybuffer';
 
-    xhr.onload = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      const bytes = xhr.response ? (xhr.response as ArrayBuffer).byteLength : (loadedBytes || 5_000_000);
-      const finalMbps = elapsed > 0 ? (bytes * 8) / (elapsed * 1_000_000) : 0;
-      resolve(Math.max(0.1, Math.round(finalMbps * 10) / 10));
-    };
-
-    xhr.onerror = async () => {
-      // Real measurement fallback using fetch blob
-      try {
-        const start = Date.now();
-        const res = await fetch(`https://www.google.com/images/branding/googlelogo/2x/googlelogo_color_272x92dp.png?t=${start}`);
-        const blob = await res.blob();
-        const elapsed = (Date.now() - start) / 1000;
-        if (elapsed > 0 && blob.size > 0) {
-          const mbps = (blob.size * 8) / (elapsed * 1_000_000);
-          resolve(Math.max(0.1, Math.round(mbps * 10) / 10));
-        } else {
-          reject(new Error('Gagal mengukur download'));
+      xhr.onprogress = (e) => {
+        if (e.loaded > 0) {
+          loadedPerStream[index] = e.loaded;
+          const totalLoaded = loadedPerStream.reduce((a, b) => a + b, 0);
+          const elapsed = (Date.now() - startTime) / 1000;
+          if (elapsed > 0) {
+            const currentMbps = (totalLoaded * 8) / (elapsed * 1_000_000);
+            onProgress?.(Math.round(currentMbps * 10) / 10);
+          }
         }
-      } catch (err) {
-        reject(err);
-      }
-    };
+      };
 
-    xhr.timeout = 15000;
-    xhr.ontimeout = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      if (loadedBytes > 0 && elapsed > 0) {
-        const mbps = (loadedBytes * 8) / (elapsed * 1_000_000);
-        resolve(Math.max(0.1, Math.round(mbps * 10) / 10));
-      } else {
-        reject(new Error('Timeout mengukur download'));
-      }
-    };
+      xhr.onload = () => {
+        const bytes = xhr.response ? (xhr.response as ArrayBuffer).byteLength : (loadedPerStream[index] || chunkSize);
+        loadedPerStream[index] = bytes;
+        resolve(bytes);
+      };
 
-    xhr.send();
-  });
+      xhr.onerror = () => resolve(loadedPerStream[index]);
+      xhr.timeout = 12000;
+      xhr.ontimeout = () => resolve(loadedPerStream[index]);
+
+      xhr.send();
+    });
+  };
+
+  const results = await Promise.all([
+    downloadStream(0),
+    downloadStream(1),
+    downloadStream(2),
+  ]);
+
+  const totalBytes = results.reduce((a, b) => a + b, 0);
+  const totalElapsed = (Date.now() - startTime) / 1000;
+  const finalMbps = totalElapsed > 0 ? (totalBytes * 8) / (totalElapsed * 1_000_000) : 0;
+  return Math.max(0.1, Math.round(finalMbps * 10) / 10);
 };
 
+/**
+ * Multi-stream parallel upload test (2 simultaneous connections)
+ */
 export const measureUpload = async (
   onProgress?: (mbps: number) => void,
 ): Promise<number> => {
-  return new Promise((resolve, reject) => {
-    const xhr = new XMLHttpRequest();
-    const testUrl = 'https://speed.cloudflare.com/__up';
-    const startTime = Date.now();
+  const numStreams = 2;
+  const payloadSize = 300_000; // 300KB per stream
+  const startTime = Date.now();
+  const loadedPerStream = new Array(numStreams).fill(0);
 
-    // 500KB real payload
-    const payloadSize = 500_000;
-    const payload = new Uint8Array(payloadSize).fill(65);
+  const uploadStream = (index: number): Promise<number> => {
+    return new Promise((resolve) => {
+      const xhr = new XMLHttpRequest();
+      const url = `https://speed.cloudflare.com/__up?t=${Date.now()}_${index}`;
+      const payload = new Uint8Array(payloadSize).fill(65);
 
-    xhr.open('POST', testUrl, true);
-    xhr.setRequestHeader('Content-Type', 'application/octet-stream');
+      xhr.open('POST', url, true);
+      xhr.setRequestHeader('Content-Type', 'application/octet-stream');
 
-    let lastLoaded = 0;
-    if (xhr.upload) {
-      xhr.upload.onprogress = (event) => {
-        lastLoaded = event.loaded;
-        const elapsed = (Date.now() - startTime) / 1000;
-        if (elapsed > 0 && event.loaded > 0) {
-          const mbps = (event.loaded * 8) / (elapsed * 1_000_000);
-          onProgress?.(Math.round(mbps * 10) / 10);
-        }
+      if (xhr.upload) {
+        xhr.upload.onprogress = (e) => {
+          if (e.loaded > 0) {
+            loadedPerStream[index] = e.loaded;
+            const totalLoaded = loadedPerStream.reduce((a, b) => a + b, 0);
+            const elapsed = (Date.now() - startTime) / 1000;
+            if (elapsed > 0) {
+              const currentMbps = (totalLoaded * 8) / (elapsed * 1_000_000);
+              onProgress?.(Math.round(currentMbps * 10) / 10);
+            }
+          }
+        };
+      }
+
+      xhr.onload = () => {
+        loadedPerStream[index] = payloadSize;
+        resolve(payloadSize);
       };
-    }
 
-    xhr.onload = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      const mbps = elapsed > 0 ? (payloadSize * 8) / (elapsed * 1_000_000) : 0;
-      resolve(Math.max(0.1, Math.round(mbps * 10) / 10));
-    };
+      xhr.onerror = () => resolve(loadedPerStream[index]);
+      xhr.timeout = 10000;
+      xhr.ontimeout = () => resolve(loadedPerStream[index]);
 
-    xhr.onerror = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      if (lastLoaded > 0 && elapsed > 0) {
-        const mbps = (lastLoaded * 8) / (elapsed * 1_000_000);
-        resolve(Math.max(0.1, Math.round(mbps * 10) / 10));
-      } else {
-        // Real upload to httpbin as fallback
-        const start = Date.now();
-        fetch('https://httpbin.org/post', {
-          method: 'POST',
-          body: new Uint8Array(200_000).fill(65),
-        })
-          .then(() => {
-            const el = (Date.now() - start) / 1000;
-            const mb = el > 0 ? (200_000 * 8) / (el * 1_000_000) : 0;
-            resolve(Math.max(0.1, Math.round(mb * 10) / 10));
-          })
-          .catch(() => reject(new Error('Gagal mengukur upload')));
-      }
-    };
+      xhr.send(payload);
+    });
+  };
 
-    xhr.timeout = 15000;
-    xhr.ontimeout = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      if (lastLoaded > 0 && elapsed > 0) {
-        const mbps = (lastLoaded * 8) / (elapsed * 1_000_000);
-        resolve(Math.max(0.1, Math.round(mbps * 10) / 10));
-      } else {
-        reject(new Error('Timeout mengukur upload'));
-      }
-    };
+  const results = await Promise.all([
+    uploadStream(0),
+    uploadStream(1),
+  ]);
 
-    xhr.send(payload);
-  });
+  const totalBytes = results.reduce((a, b) => a + b, 0);
+  const totalElapsed = (Date.now() - startTime) / 1000;
+  const finalMbps = totalElapsed > 0 ? (totalBytes * 8) / (totalElapsed * 1_000_000) : 0;
+  return Math.max(0.1, Math.round(finalMbps * 10) / 10);
 };
 
 export const runFullSpeedTest = async (
