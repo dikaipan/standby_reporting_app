@@ -641,7 +641,7 @@ export default function NewReportScreen() {
       {/* ===== SECTION D: TRAFFIC REPORT ===== */}
       <View style={styles.card}>
         <SectionHeader title="D. Report Traffic Pengunjung" />
-        <Text style={styles.sectionHint}>Ketuk "+ Tambah Sekarang" untuk isi jam otomatis</Text>
+        <Text style={styles.sectionHint}>Ketuk "Tambah Sekarang" untuk isi jam otomatis</Text>
 
         {trafficRows.length === 0 && (
           <Text style={styles.emptyRow}>Belum ada data. Tambah baris pertama.</Text>
@@ -723,7 +723,7 @@ export default function NewReportScreen() {
 
         <TouchableOpacity style={styles.addRowBtn} onPress={addTrafficRow}>
           <Ionicons name="add-circle-outline" size={18} color={Colors.success} />
-          <Text style={[styles.addRowText, { color: Colors.success }]}>+ Tambah Sekarang</Text>
+          <Text style={[styles.addRowText, { color: Colors.success }]}>Tambah Sekarang</Text>
         </TouchableOpacity>
       </View>
 
@@ -731,7 +731,7 @@ export default function NewReportScreen() {
       <View style={styles.bottomActions}>
         <TouchableOpacity
           style={styles.saveDraftBtn}
-          onPress={async () => { await saveAsDraft(); Alert.alert('✅ Draft Tersimpan'); }}
+          onPress={async () => { await saveAsDraft(); Alert.alert('Draft Tersimpan'); }}
         >
           <Ionicons name="save-outline" size={18} color={Colors.primary} />
           <Text style={styles.saveDraftText}>Simpan Draft</Text>
@@ -753,7 +753,7 @@ export default function NewReportScreen() {
         disabled={saving}
       >
         <Ionicons name="checkmark-circle" size={22} color={Colors.dark} />
-        <Text style={styles.finishText}>{saving ? 'Menyimpan...' : '✓ Tandai Laporan Selesai'}</Text>
+        <Text style={styles.finishText}>{saving ? 'Menyimpan...' : 'Tandai Laporan Selesai'}</Text>
       </TouchableOpacity>
 
     </ScrollView>
