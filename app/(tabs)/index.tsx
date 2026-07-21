@@ -70,7 +70,7 @@ export default function DashboardScreen() {
         <View style={styles.bannerGlow} />
         <Text style={styles.bannerTitle}>Hitachi POS</Text>
         <Text style={styles.bannerSub}>CE Standby Report System</Text>
-        <Text style={styles.bannerMerchant}>📍 {draftReport?.nama_merchant ? draftReport.nama_merchant : 'Merchant Standby'}</Text>
+        <Text style={styles.bannerMerchant}>Merchant: {draftReport?.nama_merchant ? draftReport.nama_merchant : 'Standby'}</Text>
       </View>
 
       {/* Draft Alert */}

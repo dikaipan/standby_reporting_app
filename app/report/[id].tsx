@@ -111,7 +111,7 @@ export default function ReportDetailScreen() {
 
       {/* Section A */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>👤 Identitas CE</Text>
+        <Text style={styles.cardTitle}>Identitas CE</Text>
         <Row label="Nama CE" value={report.nama_ce} />
         <Row label="Nama Merchant" value={report.nama_merchant} />
         <Row label="Tanggal Standby" value={report.tanggal} />
@@ -123,7 +123,7 @@ export default function ReportDetailScreen() {
 
       {/* Section B */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>✅ Checklist Operasional</Text>
+        <Text style={styles.cardTitle}>Checklist Operasional</Text>
         <View style={styles.checkRow}>
           <Text style={styles.checkLabel}>Aplikasi POS Berjalan Normal</Text>
           <YNBadge value={yn(report.pos_normal)} />
@@ -154,7 +154,7 @@ export default function ReportDetailScreen() {
 
       {/* Section C - Network */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>📡 Report Network Per Jam</Text>
+        <Text style={styles.cardTitle}>Report Network Per Jam</Text>
 
         <View style={styles.networkSummary}>
           <View style={[styles.netStatCard, { backgroundColor: Colors.successLight }]}>
@@ -179,7 +179,7 @@ export default function ReportDetailScreen() {
                 </Text>
               </View>
               {nr.is_auto_speedtest === 1 && (
-                <Text style={styles.autoTag}>⚡ Auto</Text>
+                <Text style={styles.autoTag}>Auto</Text>
               )}
             </View>
             <View style={styles.networkDetailStats}>
@@ -194,7 +194,7 @@ export default function ReportDetailScreen() {
 
       {/* Section D - Traffic */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>👥 Report Traffic Pengunjung</Text>
+        <Text style={styles.cardTitle}>Report Traffic Pengunjung</Text>
 
         {trafficRows.length === 0 && <Text style={styles.emptyText}>Belum ada data traffic.</Text>}
 

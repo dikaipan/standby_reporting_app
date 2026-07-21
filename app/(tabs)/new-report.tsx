@@ -26,9 +26,9 @@ const currentDate = () => {
   return `${d.getDate()} ${['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][d.getMonth()]} ${d.getFullYear()}`;
 };
 
-const SectionHeader = ({ icon, title }: { icon: string; title: string }) => (
+const SectionHeader = ({ icon, title }: { icon?: string; title: string }) => (
   <View style={styles.sectionHeader}>
-    <Text style={styles.sectionIcon}>{icon}</Text>
+    {icon ? <Text style={styles.sectionIcon}>{icon}</Text> : null}
     <Text style={styles.sectionTitle}>{title}</Text>
   </View>
 );
@@ -406,7 +406,7 @@ export default function NewReportScreen() {
 
       {/* ===== SECTION A: IDENTITAS ===== */}
       <View style={styles.card}>
-        <SectionHeader icon="👤" title="A. Identitas CE" />
+        <SectionHeader title="A. Identitas CE" />
 
         <InputField label="Nama CE" value={namaCE} onChangeText={setNamaCE} required
           placeholder="Nama CE yang bertugas" />
@@ -458,7 +458,7 @@ export default function NewReportScreen() {
 
       {/* ===== SECTION B: CHECKLIST ===== */}
       <View style={styles.card}>
-        <SectionHeader icon="✅" title="B. Checklist Operasional" />
+        <SectionHeader title="B. Checklist Operasional" />
 
         <YNToggle label="Aplikasi POS Berjalan Normal" value={posNormal} onChange={setPosNormal} />
         <YNToggle label="Login Kasir Berhasil saat Pergantian Shift" value={loginNormal} onChange={setLoginNormal} />
@@ -498,8 +498,8 @@ export default function NewReportScreen() {
 
       {/* ===== SECTION C: NETWORK REPORT ===== */}
       <View style={styles.card}>
-        <SectionHeader icon="📡" title="C. Report Network Per Jam" />
-        <Text style={styles.sectionHint}>Tap "⚡ Speed Test" untuk mengisi otomatis</Text>
+        <SectionHeader title="C. Report Network Per Jam" />
+        <Text style={styles.sectionHint}>Tap "Speed Test" untuk mengisi otomatis</Text>
 
         {networkRows.length === 0 && (
           <Text style={styles.emptyRow}>Belum ada data. Tambah baris atau jalankan Speed Test.</Text>
@@ -618,7 +618,7 @@ export default function NewReportScreen() {
               placeholderTextColor={Colors.textMuted}
             />
             {row.is_auto_speedtest === 1 && (
-              <Text style={styles.autoTag}>⚡ Dari Speed Test Otomatis</Text>
+              <Text style={styles.autoTag}>Dari Speed Test Otomatis</Text>
             )}
           </View>
         ))}
@@ -633,14 +633,14 @@ export default function NewReportScreen() {
             onPress={() => router.push('/(tabs)/speedtest')}
           >
             <Ionicons name="speedometer" size={18} color={Colors.secondary} />
-            <Text style={[styles.addRowText, { color: Colors.secondary }]}>⚡ Speed Test</Text>
+            <Text style={[styles.addRowText, { color: Colors.secondary }]}>Speed Test</Text>
           </TouchableOpacity>
         </View>
       </View>
 
       {/* ===== SECTION D: TRAFFIC REPORT ===== */}
       <View style={styles.card}>
-        <SectionHeader icon="👥" title="D. Report Traffic Pengunjung" />
+        <SectionHeader title="D. Report Traffic Pengunjung" />
         <Text style={styles.sectionHint}>Ketuk "+ Tambah Sekarang" untuk isi jam otomatis</Text>
 
         {trafficRows.length === 0 && (

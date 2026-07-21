@@ -49,7 +49,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <TabIcon name="home" color={color} focused={focused} />
           ),
-          headerTitle: '📊 Dashboard',
+          headerTitle: 'Dashboard',
         }}
       />
       <Tabs.Screen
@@ -59,7 +59,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <TabIcon name="document-text" color={color} focused={focused} />
           ),
-          headerTitle: '📝 Buat / Edit Laporan',
+          headerTitle: 'Buat / Edit Laporan',
         }}
       />
       <Tabs.Screen
@@ -69,7 +69,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <TabIcon name="speedometer" color={color} focused={focused} />
           ),
-          headerTitle: '⚡ Speed Test',
+          headerTitle: 'Speed Test',
         }}
       />
       <Tabs.Screen
@@ -79,7 +79,7 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <TabIcon name="time" color={color} focused={focused} />
           ),
-          headerTitle: '🕐 Riwayat Laporan',
+          headerTitle: 'Riwayat Laporan',
         }}
       />
     </Tabs>
