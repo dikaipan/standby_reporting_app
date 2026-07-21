@@ -1,5 +1,6 @@
 // utils/exportCsv.ts
 import * as FileSystem from 'expo-file-system';
+import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { Report, NetworkReport, TrafficReport } from '../database/db';
 
@@ -129,22 +130,44 @@ export const exportReportAsCSV = async (
     const safeCE = String(report.nama_ce || 'CE').replace(/[^a-zA-Z0-9]/g, '_');
     const fileName = `LaporanCE_${safeDate}_${safeCE}.csv`;
 
-    let baseDir = (FileSystem as any).documentDirectory || (FileSystem as any).cacheDirectory;
-    if (!baseDir) {
-      throw new Error('Direktori penyimpanan FileSystem tidak tersedia.');
-    }
-    if (!baseDir.endsWith('/')) {
-      baseDir += '/';
+    let fileUri = '';
+
+    // Strategy 1: Expo SDK 54 new File & Paths API
+    try {
+      const targetDir = Paths.cache || Paths.document;
+      if (targetDir) {
+        const file = new File(targetDir, fileName);
+        if (!file.exists) {
+          file.create();
+        }
+        file.write(csvContent);
+        fileUri = file.uri;
+      }
+    } catch (e1) {
+      console.log('SDK 54 File API fallback notice:', e1);
     }
 
-    const fileUri = `${baseDir}${fileName}`;
+    // Strategy 2: Legacy FileSystem API fallback
+    if (!fileUri) {
+      let baseDir =
+        (FileSystem as any).documentDirectory ||
+        (FileSystem as any).cacheDirectory;
 
-    await (FileSystem as any).writeAsStringAsync(fileUri, csvContent, {
-      encoding: (FileSystem as any).EncodingType?.UTF8 || 'utf8',
-    });
+      if (!baseDir) {
+        baseDir = 'file:///data/user/0/host.exp.exponent/cache/';
+      }
+      if (!baseDir.endsWith('/')) {
+        baseDir += '/';
+      }
+      fileUri = `${baseDir}${fileName}`;
+
+      await (FileSystem as any).writeAsStringAsync(fileUri, csvContent, {
+        encoding: (FileSystem as any).EncodingType?.UTF8 || 'utf8',
+      });
+    }
 
     const isAvailable = await Sharing.isAvailableAsync();
-    if (isAvailable) {
+    if (isAvailable && fileUri) {
       await Sharing.shareAsync(fileUri, {
         mimeType: 'text/csv',
         dialogTitle: 'Export Laporan CE CSV',
