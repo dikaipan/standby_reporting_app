@@ -15,46 +15,48 @@ const yn = (val: number): string => (val === 1 ? 'Y' : 'N');
 
 export const generateCSV = (
   report: Report,
-  networkReports: NetworkReport[],
-  trafficReports: TrafficReport[],
+  networkReports: NetworkReport[] = [],
+  trafficReports: TrafficReport[] = [],
 ): string => {
   const lines: string[] = [];
+  const safeNetwork = Array.isArray(networkReports) ? networkReports : [];
+  const safeTraffic = Array.isArray(trafficReports) ? trafficReports : [];
 
   // ===== HEADER =====
-  const merchantName = (report.nama_merchant || 'Sanpachi').toUpperCase();
+  const merchantName = (report?.nama_merchant || 'Sanpachi').toUpperCase();
   lines.push(`LAPORAN CE - HITACHI POS ${merchantName},,,,,,`);
   lines.push(',,,,,,');
-  lines.push(`Nama CE,${escapeCSV(report.nama_ce)},,,,,`);
-  lines.push(`Nama Merchant,${escapeCSV(report.nama_merchant || 'Sanpachi')},,,,,`);
-  lines.push(`Tanggal Standby,${escapeCSV(report.tanggal)},,,,,`);
-  lines.push(`Waktu Standby,"${report.waktu_mulai} - ${report.waktu_selesai}",,,,,`);
+  lines.push(`Nama CE,${escapeCSV(report?.nama_ce)},,,,,`);
+  lines.push(`Nama Merchant,${escapeCSV(report?.nama_merchant || 'Sanpachi')},,,,,`);
+  lines.push(`Tanggal Standby,${escapeCSV(report?.tanggal)},,,,,`);
+  lines.push(`Waktu Standby,"${report?.waktu_mulai || ''} - ${report?.waktu_selesai || ''}",,,,,`);
   lines.push(',,,,,,');
 
   // Kasir info
-  const kasir1 = report.kasir_shift1_nama
+  const kasir1 = report?.kasir_shift1_nama
     ? `Pkl ${report.kasir_shift1_mulai} - ${report.kasir_shift1_selesai} : An ${report.kasir_shift1_nama}`
     : '-';
-  const kasir2 = report.kasir_shift2_nama
+  const kasir2 = report?.kasir_shift2_nama
     ? `Pkl ${report.kasir_shift2_mulai} - ${report.kasir_shift2_selesai} : An ${report.kasir_shift2_nama}`
     : '';
-  const kasirNama1 = report.kasir_shift1_nama || '-';
-  const kasirNama2 = report.kasir_shift2_nama || '-';
-  lines.push(`Nama Kasir Bertugas (Shift 1),${escapeCSV(kasirNama1)},"${report.kasir_shift1_mulai} - ${report.kasir_shift1_selesai}",,,,`);
-  lines.push(`Nama Kasir Bertugas (Shift 2),${escapeCSV(kasirNama2)},"${report.kasir_shift2_mulai} - ${report.kasir_shift2_selesai}",,,,`);
+  const kasirNama1 = report?.kasir_shift1_nama || '-';
+  const kasirNama2 = report?.kasir_shift2_nama || '-';
+  lines.push(`Nama Kasir Bertugas (Shift 1),${escapeCSV(kasirNama1)},"${report?.kasir_shift1_mulai || ''} - ${report?.kasir_shift1_selesai || ''}",,,,`);
+  lines.push(`Nama Kasir Bertugas (Shift 2),${escapeCSV(kasirNama2)},"${report?.kasir_shift2_mulai || ''} - ${report?.kasir_shift2_selesai || ''}",,,,`);
 
-  const catatanKasir = report.catatan_kasir || [kasir1, kasir2].filter(Boolean).join(' , ');
+  const catatanKasir = report?.catatan_kasir || [kasir1, kasir2].filter(Boolean).join(' , ');
   lines.push(`Catatan Detail Pembagian Shift Kasir,${escapeCSV(catatanKasir)},,,,,`);
   lines.push(',,,,,,');
 
   // ===== CHECKLIST OPERASIONAL =====
   lines.push('CHECKLIST OPERASIONAL & KENDALA,,,,,,');
   lines.push('Parameter Pemeriksaan,Status (Y/N),Jam Kendala (Jika Ada),Detail Kendala & Lampiran Evidence,,,');
-  lines.push(`Aplikasi POS Berjalan Normal,${yn(report.pos_normal)},,,,`);
-  lines.push(`Login Kasir Berhasil tanpa kendala ketika pergantian Shift,${yn(report.login_kasir_normal)},,,,`);
-  lines.push(`Printer Struk Berfungsi Normal,${yn(report.printer_normal)},,,,`);
-  lines.push(`Koneksi Jaringan Stabil,${yn(report.jaringan_stabil)},,,,`);
+  lines.push(`Aplikasi POS Berjalan Normal,${yn(report?.pos_normal ?? 1)},,,,`);
+  lines.push(`Login Kasir Berhasil tanpa kendala ketika pergantian Shift,${yn(report?.login_kasir_normal ?? 1)},,,,`);
+  lines.push(`Printer Struk Berfungsi Normal,${yn(report?.printer_normal ?? 1)},,,,`);
+  lines.push(`Koneksi Jaringan Stabil,${yn(report?.jaringan_stabil ?? 1)},,,,`);
 
-  if (report.ada_error === 1) {
+  if (report?.ada_error === 1) {
     lines.push(
       `Ditemukan Eror Yang Berdampak Ketika Operasional,N,${escapeCSV(report.jam_error)},${escapeCSV(report.detail_error)},,,`,
     );
@@ -67,10 +69,10 @@ export const generateCSV = (
   lines.push('REPORT NETWORK PER JAM,,,,,,');
   lines.push('Jam Check,Status Koneksi (Good/Bad),Ping (ms),Download (Mbps),Upload (Mbps),Keterangan / Kendala,');
 
-  if (networkReports.length === 0) {
+  if (safeNetwork.length === 0) {
     lines.push('-,-,-,-,-,-,');
   } else {
-    for (const nr of networkReports) {
+    for (const nr of safeNetwork) {
       lines.push(
         `${escapeCSV(nr.jam_check)},${escapeCSV(nr.status)},${nr.ping || ''},${nr.download || ''},${nr.upload || ''},${escapeCSV(nr.keterangan)},`,
       );
@@ -88,10 +90,10 @@ export const generateCSV = (
   lines.push('Report traffic pengunjung,,,,,,');
   lines.push('Jam,Status,Meja Terisi,Total Meja,Keterangan,,');
 
-  if (trafficReports.length === 0) {
+  if (safeTraffic.length === 0) {
     lines.push('-,-,-,-,-,,');
   } else {
-    for (const tr of trafficReports) {
+    for (const tr of safeTraffic) {
       const detail =
         tr.status === 'Full'
           ? tr.meja_terisi && tr.total_meja
@@ -114,21 +116,25 @@ export const generateCSV = (
 
 export const exportReportAsCSV = async (
   report: Report,
-  networkReports: NetworkReport[],
-  trafficReports: TrafficReport[],
+  networkReports: NetworkReport[] = [],
+  trafficReports: TrafficReport[] = [],
 ): Promise<void> => {
   try {
+    if (!report) {
+      throw new Error('Data laporan kosong.');
+    }
+
     const csvContent = generateCSV(report, networkReports, trafficReports);
-    const safeDate = (report.tanggal || 'report').replace(/[^a-zA-Z0-9]/g, '_');
-    const safeCE = (report.nama_ce || 'CE').replace(/[^a-zA-Z0-9]/g, '_');
+    const safeDate = String(report.tanggal || 'report').replace(/[^a-zA-Z0-9]/g, '_');
+    const safeCE = String(report.nama_ce || 'CE').replace(/[^a-zA-Z0-9]/g, '_');
     const fileName = `LaporanCE_${safeDate}_${safeCE}.csv`;
 
-    const baseDir =
-      (FileSystem as any).documentDirectory ||
-      (FileSystem as any).cacheDirectory;
-
+    let baseDir = (FileSystem as any).documentDirectory || (FileSystem as any).cacheDirectory;
     if (!baseDir) {
-      throw new Error('Direktori penyimpanan FileSystem tidak ditemukan.');
+      throw new Error('Direktori penyimpanan FileSystem tidak tersedia.');
+    }
+    if (!baseDir.endsWith('/')) {
+      baseDir += '/';
     }
 
     const fileUri = `${baseDir}${fileName}`;
@@ -145,10 +151,10 @@ export const exportReportAsCSV = async (
         UTI: 'public.comma-separated-values-text',
       });
     } else {
-      throw new Error('Fitur Berbagi File (Sharing) tidak didukung pada perangkat ini.');
+      throw new Error('Fitur Sharing file tidak aktif di perangkat ini.');
     }
   } catch (err: any) {
     console.error('exportReportAsCSV error:', err);
-    throw new Error(err?.message || 'Gagal membuat file CSV.');
+    throw new Error(err?.message || 'Gagal mengeksport file CSV.');
   }
 };

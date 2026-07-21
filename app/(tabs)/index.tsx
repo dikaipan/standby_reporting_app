@@ -216,14 +216,14 @@ export default function DashboardScreen() {
 
       {/* Footer / Developer Info */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Developed by <Text style={styles.footerAuthor}>Handika</Text></Text>
         <TouchableOpacity
-          style={styles.githubBtn}
+          style={styles.devContainer}
           onPress={() => Linking.openURL('https://github.com/dikaipan')}
           activeOpacity={0.7}
         >
-          <Ionicons name="logo-github" size={18} color={Colors.textPrimary} />
-          <Text style={styles.githubText}>github.com/dikaipan</Text>
+          <Text style={styles.footerText}>Developed by </Text>
+          <Ionicons name="logo-github" size={16} color={Colors.primary} style={{ marginRight: 4 }} />
+          <Text style={styles.footerAuthor}>Handika</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -323,20 +323,11 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Colors.darkBorder,
     alignItems: 'center',
-    gap: 8,
   },
-  footerText: { fontSize: 12, color: Colors.textSecondary },
-  footerAuthor: { fontWeight: '800', color: Colors.primary },
-  githubBtn: {
+  devContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surface,
-    borderWidth: 1,
-    borderColor: Colors.darkBorder,
   },
-  githubText: { fontSize: 12, fontWeight: '700', color: Colors.textPrimary },
+  footerText: { fontSize: 12, color: Colors.textSecondary },
+  footerAuthor: { fontSize: 12, fontWeight: '800', color: Colors.primary },
 });
