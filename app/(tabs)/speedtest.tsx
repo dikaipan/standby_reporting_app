@@ -100,7 +100,7 @@ export default function SpeedTestScreen() {
         is_auto_speedtest: 1,
       });
 
-      Alert.alert('✅ Tersimpan!', `Hasil speed test jam ${jam} berhasil ditambahkan ke laporan aktif.`);
+      Alert.alert('Tersimpan!', `Hasil speed test jam ${jam} berhasil ditambahkan ke laporan aktif.`);
     } catch (e) {
       Alert.alert('Error', 'Gagal menyimpan hasil. Silakan coba lagi.');
     }
@@ -216,7 +216,7 @@ export default function SpeedTestScreen() {
         >
           <Ionicons name="save" size={20} color={Colors.dark} />
           <Text style={styles.saveBtnText}>
-            {saving ? 'Menyimpan...' : '💾 Simpan ke Laporan Aktif'}
+            {saving ? 'Menyimpan...' : 'Simpan ke Laporan Aktif'}
           </Text>
         </TouchableOpacity>
       )}
@@ -224,7 +224,7 @@ export default function SpeedTestScreen() {
       {/* History */}
       {history.length > 0 && (
         <View style={styles.historyCard}>
-          <Text style={styles.historyTitle}>Riwayat Speed Test Malam Ini</Text>
+          <Text style={styles.historyTitle}>Riwayat Speed Test Shift Ini</Text>
           {history.map((item, i) => {
             const s = getNetworkStatus(item.ping, item.download);
             return (
